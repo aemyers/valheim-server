@@ -10,7 +10,7 @@ fi
 
 # create
 timestamp=$(date +%Y%m%d%H%M%S)
-tar --create --gzip --verbose --file="$BACKUPS/$timestamp.tar.gz" "$SOURCE"
+tar --directory="$SOURCE" --create --gzip --verbose --file="$BACKUPS/$timestamp.tar.gz" .
 
 # prune
 ls -dt "$BACKUPS"/* \
