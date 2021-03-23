@@ -9,10 +9,11 @@ if [[ ! -d "$BACKUPS" ]]; then
 fi
 
 # create
-timestamp=$(date +%Y%m%d%H%M%S)
-tar --directory="$SOURCE" --create --gzip --verbose --file="$BACKUPS/$timestamp.tar.gz" .
+stamp=$(date --utc +'%Y%m%d%H%M%S')
+echo "creating backup at $BACKUPS/$stamp.tar.gz"
+tar --directory="$SOURCE" --create --gzip --verbose --file="$BACKUPS/$stamp.tar.gz" .
 
 # prune
 ls -dt "$BACKUPS"/* \
-	| tail --lines=+$(( $HISTORY + 1 )) \
-	| xargs rm --force
+	| tail --lines=+$(( $HISTORY + 1 ))) \
+	| xargs rm --verbose --force
