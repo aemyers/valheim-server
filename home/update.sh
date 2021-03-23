@@ -1,1 +1,1 @@
-/usr/games/steamcmd +runscript update.steam
+/usr/games/steamcmd +runscript /home/{ACCOUNT}/update.steam
