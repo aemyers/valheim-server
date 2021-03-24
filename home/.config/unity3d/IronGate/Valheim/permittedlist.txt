@@ -1,0 +1,7 @@
+// List permitted players ID ONE per line
+
+// EdGruberman
+76561197961565395
+
+// Emilyrn
+76561199070144094

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# config
+# environment
 INSTANCE=/opt/valheim
 ACCOUNT=valheim
 
@@ -17,14 +17,16 @@ apt --yes install lib32gcc1 lib32stdc++6 steamcmd
 groupadd  "$ACCOUNT"
 useradd --create-home --gid "$ACCOUNT" "$ACCOUNT"
 
-# valheim
+# install
 mkdir "$INSTANCE"
 chown -R "$ACCOUNT":"$ACCOUNT" "$INSTANCE"
+su - "$ACCOUNT" update.sh
+
+# config
 cp --recursive home/. "/home/$ACCOUNT/"
 sed -i "s/{INSTANCE}/${INSTANCE}/g" /home/"$ACCOUNT"/*
 sed -i "s/{ACCOUNT}/${ACCOUNT}/g" /home/"$ACCOUNT"/*
 chown -R "$ACCOUNT":"$ACCOUNT" "/home/$ACCOUNT"
-su - "$ACCOUNT" update.sh
 
 # backup
 command="/home/$ACCOUNT/backup.sh > /home/$ACCOUNT/backup.log 2>&1"
