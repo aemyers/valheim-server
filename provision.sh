@@ -4,9 +4,6 @@
 INSTANCE=/opt/valheim
 ACCOUNT=valheim
 
-# secrets
-read -p 'password: ' password
-
 # prepare
 dpkg --add-architecture i386
 apt --yes update
@@ -34,7 +31,7 @@ schedule="0 * * * *"
 echo "$schedule $command" | crontab -u "$ACCOUNT" -
 
 # service
-sed "s/{password}/${password}/g" valheim.service > /etc/systemd/system/valheim.service
+cp systemd.service /etc/systemd/system/valheim.service
 systemctl daemon-reload
 systemctl enable valheim.service
 systemctl start valheim
