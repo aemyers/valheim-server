@@ -6,7 +6,7 @@ ACCOUNT=valheim
 
 # prepare
 dpkg --add-architecture i386
-apt --yes update
+apt update
 apt --yes upgrade
 apt --yes install lib32gcc1 lib32stdc++6 steamcmd
 
