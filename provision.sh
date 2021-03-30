@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o xtrace
+
 # environment
 ACCOUNT=valheim
 RESOURCES=/var/opt/valheim
