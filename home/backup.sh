@@ -15,5 +15,5 @@ tar --directory="$SOURCE" --create --gzip --verbose --file="$BACKUPS/$stamp.tar.
 
 # prune
 ls -dt "$BACKUPS"/* \
-	| tail --lines=+$(( $HISTORY + 1 ))) \
+	| tail --lines=+$(( $HISTORY + 1 )) \
 	| xargs rm --verbose --force
