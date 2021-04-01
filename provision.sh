@@ -20,8 +20,8 @@ useradd --system --home-dir "$RESOURCES" --gid "$ACCOUNT" "$ACCOUNT"
 # resources
 mkdir --parents "$RESOURCES"
 cp --recursive resources/. "$RESOURCES/"
-find "$RESOURCES" -type f -exec sed -i "s|{RESOURCES}|${RESOURCES}|g" {} \;
-find "$RESOURCES" -type f -exec sed -i "s|{INSTALL}|${INSTALL}|g" {} \;
+sed -i "s|{{ RESOURCES }}|${RESOURCES}|g" "$RESOURCES"/*.sh
+sed -i "s|{{ INSTALL }}|${INSTALL}|g" "$RESOURCES"/*.sh
 chown -R "$ACCOUNT":"$ACCOUNT" "$RESOURCES"
 
 # install
@@ -36,8 +36,8 @@ echo "$schedule $command" | crontab -u "$ACCOUNT" -
 
 # service
 cat systemd.service \
-	| sed "s|{RESOURCES}|${RESOURCES}|g" \
-	| sed "s|{INSTALL}|${INSTALL}|g" \
+	| sed "s|{{ RESOURCES }}|${RESOURCES}|g" \
+	| sed "s|{{ INSTALL }}|${INSTALL}|g" \
 	> /etc/systemd/system/valheim.service
 systemctl daemon-reload
 systemctl enable valheim.service

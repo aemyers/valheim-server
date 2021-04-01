@@ -1,6 +1,6 @@
 #!/bin/bash
 
-INSTALL='{INSTALL}'
+INSTALL='{{ INSTALL }}'
 APPID='896660' # Valheim Dedicated Server https://steamdb.info/app/896660/depots/?branch=public
 STEAMCMD='/usr/games/steamcmd'
 

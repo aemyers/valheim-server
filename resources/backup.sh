@@ -1,7 +1,8 @@
 #!/bin/bash
 
-WORLDS={RESOURCES}/save/worlds
-BACKUPS={RESOURCES}/backups
+RESOURCES='{{ RESOURCES }}'
+WORLDS="$RESOURCES/save/worlds"
+BACKUPS="$RESOURCES/backups"
 HISTORY=10
 
 if [[ ! -d "$BACKUPS" ]]; then

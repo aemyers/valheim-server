@@ -10,7 +10,7 @@ WantedBy=multi-user.target
 User=valheim
 Group=valheim
 
-WorkingDirectory={INSTALL}
+WorkingDirectory={{ INSTALL }}
 Environment='LD_LIBRARY_PATH=./linux64'
 Environment='SteamAppId=892970'
 
@@ -21,8 +21,8 @@ Environment='WORLD=world'
 Environment='SAVEDIR={RESOURCES}/save'
 
 TimeoutStartSec=300
-ExecStartPre={RESOURCES}/update.sh
-ExecStart={INSTALL}/valheim_server.x86_64 -port $PORT -public $PUBLIC -name $NAME -world $WORLD -savedir $SAVEDIR
+ExecStartPre={{ RESOURCES }}/update.sh
+ExecStart={{ INSTALL }}/valheim_server.x86_64 -port $PORT -public $PUBLIC -name $NAME -world $WORLD -savedir $SAVEDIR
 
 KillSignal=SIGINT
 
