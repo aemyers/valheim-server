@@ -14,7 +14,7 @@ apt --yes upgrade
 apt --yes install lib32gcc1 lib32stdc++6 steamcmd
 
 # account
-groupadd  "$ACCOUNT"
+groupadd "$ACCOUNT"
 useradd --system --home-dir "$RESOURCES" --gid "$ACCOUNT" "$ACCOUNT"
 
 # resources
