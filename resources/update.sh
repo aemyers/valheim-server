@@ -6,6 +6,7 @@ STEAMCMD='/usr/games/steamcmd'
 
 installed=$(grep -Po '(?<="buildid"\t\t").*(?=")' "$INSTALL/steamapps/appmanifest_${APPID}.acf")
 
+rm -f "$HOME/.steam/appcache/appinfo.vdf"
 info=$("$STEAMCMD" \
 	+login anonymous \
 	+app_info_update 1 \
