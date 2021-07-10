@@ -5,12 +5,21 @@ set -o pipefail
 
 declare -r PROPERTIES='monitor.properties'
 declare CONNECTION='false'
+declare PLAYER=''
 
 value() {
 	local -r key="${1}"
-	local -r file="${2:-$PROPERTIES}"
+	local -r default="${2:-}"
+	local -r file="${3:-$PROPERTIES}"
 
-	grep "^${key}=" "${file}" | cut --delimiter='=' --fields='2-'
+	local -r entry=$(grep --regexp="^${key}=" "${file}")
+
+	if [[ "${entry}" == '' ]]; then
+		echo "${default}"
+		exit
+	fi
+
+	cut --delimiter='=' --fields='2-' <<< "${entry}"
 }
 
 notify() {
@@ -26,17 +35,25 @@ notify() {
 parse() {
 	local -r line="${1}"
 
-	if grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
+	if grep --quiet --regexp='Got connection SteamID' <<< "${line}"; then
+		CONNECTION='true'
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
-		local -r name=$(cut --delimiter=' ' --fields=6 <<< "${message}")
-		notify "player connected: ${name}"
+		local -r id=$(cut --delimiter=' ' --fields=5 <<< "${message}")
+		PLAYER=$(value "player.${id}" "(SteamID ${id})")
+
+	elif [[ "${CONNECTION}" == 'true' ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
+		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
+		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
+		notify "${PLAYER} connected as ${character}"
+		CONNECTION='false'
+		PLAYER=''
 
 	elif grep --quiet --regexp='Random event set' <<< "${line}"; then
 		local -r event=$(cut --delimiter=':' --fields=8 <<< "${line}")
 		local -r description=$(value "event.${event}")
-		notify "random event: ${event} \"${description}\""
+		notify "random event started: \"${description}\" (${event})"
 
-        fi
+	fi
 }
 
 main() {
