@@ -33,7 +33,8 @@ parse() {
 
 	elif grep --quiet --regexp='Random event set' <<< "${line}"; then
 		local -r event=$(cut --delimiter=':' --fields=8 <<< "${line}")
-		notify "random event: ${event}"
+		local -r description=$(value "event.${event}")
+		notify "random event: ${event} \"${description}\""
 
         fi
 }
