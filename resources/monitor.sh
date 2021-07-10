@@ -4,10 +4,11 @@ set -o errexit
 set -o pipefail
 
 declare -r PROPERTIES='monitor.properties'
+declare CONNECTION='false'
 
 value() {
-	local -r file="${1}"
-	local -r key="${2}"
+	local -r key="${1}"
+	local -r file="${2:-$PROPERTIES}"
 
 	grep "^${key}=" "${file}" | cut --delimiter='=' --fields='2-'
 }
@@ -38,8 +39,8 @@ parse() {
 }
 
 main() {
-	declare -r HOOK=$(value "${PROPERTIES}" "hook")
-	local -r service=$(value "${PROPERTIES}" "service")
+	declare -r HOOK=$(value "hook")
+	local -r service=$(value "service")
 
 	while true; do # until killed
 
