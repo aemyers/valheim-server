@@ -4,7 +4,6 @@ set -o errexit
 set -o pipefail
 
 declare -r PROPERTIES='monitor.properties'
-declare CONNECTION='false'
 declare PLAYER=''
 
 value() {
@@ -38,16 +37,14 @@ parse() {
 	local -r line="${1}"
 
 	if grep --quiet --regexp='Got connection SteamID' <<< "${line}"; then
-		CONNECTION='true'
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r id=$(cut --delimiter=' ' --fields=5 <<< "${message}")
 		PLAYER=$(value "player.${id}" "(SteamID ${id})")
 
-	elif [[ "${CONNECTION}" == 'true' ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
+	elif [[ "${PLAYER}" != '' ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
 		notify "${PLAYER} connected as ${character}"
-		CONNECTION='false'
 		PLAYER=''
 
 	elif grep --quiet --regexp='Random event set' <<< "${line}"; then
