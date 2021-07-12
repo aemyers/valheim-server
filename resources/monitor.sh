@@ -25,10 +25,12 @@ value() {
 notify() {
 	local -r content="${1}"
 
+	local -r escaped=$(sed 's/"/\\"/g' <<< "${content}")
+
 	curl --silent --show-error \
 		--request POST \
 		--header 'Content-type: application/json' \
-		--data '{"content":"'"${content}"'"}' \
+		--data '{"content":"'"${escaped}"'"}' \
 		"${HOOK}"
 }
 
