@@ -16,7 +16,7 @@ value() {
 
 	if [[ "${entry}" == '' ]]; then
 		echo "${default}"
-		exit
+		return
 	fi
 
 	cut --delimiter='=' --fields='2-' <<< "${entry}"
