@@ -4,9 +4,13 @@ set -o errexit
 set -o pipefail
 
 declare -r PROPERTIES='monitor.properties'
-declare PLAYER=''
+declare -r API='https://discord.com/api'
 
-value() {
+declare PLAYER=''
+declare -i CONNECTED=0
+
+# echo value for key from properties file
+property() {
 	local -r key="${1}"
 	local -r default="${2:-}"
 	local -r file="${3:-$PROPERTIES}"
@@ -21,10 +25,41 @@ value() {
 	cut --delimiter='=' --fields='2-' <<< "${entry}"
 }
 
-notify() {
-	local -r content="${1}"
+# echo formatted text for json string
+escape() {
+	local result="${1}"
 
-	local -r escaped=$(sed 's/"/\\"/g' <<< "${content}")
+	result=${result//\\/\\\\}    # backslash
+	result=${result//\"/\\\"}    # double quote
+	result=${result//\//\\\/}    # forward slash
+	result=${result//$'\t'/\\\t} # tab
+	result=${result//$'\n'/\\\n} # newline
+	result=${result//$'\r'/\\\r} # carriage return
+	result=${result//$'\f'/\\\f} # form feed
+	result=${result//$'\b'/\\\b} # backspace
+
+	echo -n "${result}"
+}
+
+# set topic for discord
+topic() {
+	local -r topic="${1}"
+	local -r escaped=$(escape "${topic}")
+
+	local -r url="${API}/channels/${CHANNEL}"
+
+	curl --silent --show-error \
+		--request PATCH \
+		--header "Authorization: Bot ${TOKEN}" \
+		--header 'Content-type: application/json' \
+		--data '{"topic":"'"${escaped}"'"}' \
+		"${url}"
+}
+
+# send message to discord
+message() {
+	local -r content="${1}"
+	local -r escaped=$(escape "${content}")
 
 	curl --silent --show-error \
 		--request POST \
@@ -39,25 +74,49 @@ parse() {
 	if grep --quiet --regexp='Got connection SteamID' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r id=$(cut --delimiter=' ' --fields=5 <<< "${message}")
-		PLAYER=$(value "player.${id}" "(SteamID ${id})")
+		PLAYER=$(property "player.${id}" "(SteamID ${id})")
 
 	elif [[ "${PLAYER}" != '' ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
-		notify "${PLAYER} connected as ${character}"
+		message "${PLAYER} connected as ${character}"
 		PLAYER=''
+		CONNECTED=$(( CONNECTED + 1 ))
+		topic "${CONNECTED} connected"
+
+	elif grep --quiet --regexp='Closing socket' <<< "${line}"; then
+		CONNECTED=$(( CONNECTED - 1 ))
+		topic "${CONNECTED} connected"
+
+	elif grep --quiet --regexp='Shuting down' <<< "${line}"; then
+		topic "server offline"
+
+	elif grep --quiet --regexp='Valheim version' <<< "${line}"; then
+		local -r version=$(cut --delimiter=':' --fields=8 <<< "${line}")
+		message "started v${version}"
+		CONNECTED=0
+		topic "${CONNECTED} connected"
+
+	elif grep --quiet --regexp='Connections' <<< "${line}"; then
+		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
+		local -r squeezed=$(tr --squeeze-repeats ' ' <<< "${message}")
+		local -ri connected=$(cut --delimiter=' ' --fields=3 <<< "${squeezed}")
+		CONNECTED=connected
 
 	elif grep --quiet --regexp='Random event set' <<< "${line}"; then
 		local -r event=$(cut --delimiter=':' --fields=8 <<< "${line}")
-		local -r description=$(value "event.${event}")
-		notify "random event started: \"${description}\" (${event})"
+		local -r description=$(property "event.${event}")
+		message "random event started: \"${description}\" (${event})"
 
 	fi
 }
 
 main() {
-	declare -r HOOK=$(value "hook")
-	local -r service=$(value "service")
+	declare -r TOKEN=$(property "token")
+	declare -r CHANNEL=$(property "channel")
+	declare -r HOOK=$(property "hook")
+
+	local -r service=$(property "service")
 
 	while true; do # until killed
 
