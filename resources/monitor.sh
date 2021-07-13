@@ -60,7 +60,7 @@ topic() {
 	local -r escaped=$(escape "${topic}")
 	local -r body='{"topic":"'"${escaped}"'"}'
 
-	api "PATCH" "/channels/${CHANNEL}" "${body}"
+	api 'PATCH' "/channels/${CHANNEL_NOTIFY}" "${body}"
 }
 
 # send message to discord
@@ -69,7 +69,23 @@ message() {
 	local -r escaped=$(escape "${content}")
 	local -r body='{"content":"'"${escaped}"'"}'
 
-	api "POST" "/channels/${CHANNEL}/messages" "${body}"
+	api 'POST' "/channels/${CHANNEL_NOTIFY}/messages" "${body}"
+}
+
+name() {
+	local -r name="${1}"
+	local -r escaped=$(escape "${name}")
+	local -r body='{"name":"'"${escaped}"'"}'
+
+	api 'PATCH' "/channels/${CHANNEL_STATUS}" "${body}"
+}
+
+status() {
+	local -ri connected=$1
+
+	CONNECTED=$connected
+	topic "${CONNECTED} connected"
+	name "valheim - ${CONNECTED}"
 }
 
 parse() {
@@ -85,27 +101,26 @@ parse() {
 		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
 		message "${PLAYER} connected as ${character}"
 		PLAYER=''
-		CONNECTED=$(( CONNECTED + 1 ))
-		topic "${CONNECTED} connected"
+		status $(( CONNECTED + 1 ))
 
 	elif grep --quiet --regexp='Closing socket' <<< "${line}"; then
-		CONNECTED=$(( CONNECTED - 1 ))
-		topic "${CONNECTED} connected"
+		status $(( CONNECTED - 1 ))
 
 	elif grep --quiet --regexp='Shuting down' <<< "${line}"; then
-		topic "server offline"
+		CONNECTED=0
+		topic 'server offline'
+		name 'valheim - offline'
 
 	elif grep --quiet --regexp='Valheim version' <<< "${line}"; then
 		local -r version=$(cut --delimiter=':' --fields=8 <<< "${line}")
 		message "started v${version}"
-		CONNECTED=0
-		topic "${CONNECTED} connected"
+		status 0
 
 	elif grep --quiet --regexp='Connections' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r squeezed=$(tr --squeeze-repeats ' ' <<< "${message}")
 		local -ri connected=$(cut --delimiter=' ' --fields=3 <<< "${squeezed}")
-		CONNECTED=connected
+		status $connected
 
 	elif grep --quiet --regexp='Random event set' <<< "${line}"; then
 		local -r event=$(cut --delimiter=':' --fields=8 <<< "${line}")
@@ -117,7 +132,8 @@ parse() {
 
 main() {
 	declare -r TOKEN=$(property "token")
-	declare -r CHANNEL=$(property "channel")
+	declare -r CHANNEL_NOTIFY=$(property "channel.notify")
+	declare -r CHANNEL_STATUS=$(property "channel.status")
 
 	local -r service=$(property "service")
 
