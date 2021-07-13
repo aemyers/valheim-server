@@ -41,31 +41,35 @@ escape() {
 	echo -n "${result}"
 }
 
+api() {
+	local -r method="${1}"
+	local -r path="${2}"
+	local -r body="${3}"
+
+	curl --silent --show-error \
+		--request "${method}" \
+		--header "Authorization: Bot ${TOKEN}" \
+		--header 'Content-type: application/json' \
+		--data "${body}" \
+		"${API}${path}"
+}
+
 # set topic for discord
 topic() {
 	local -r topic="${1}"
 	local -r escaped=$(escape "${topic}")
+	local -r body='{"topic":"'"${escaped}"'"}'
 
-	local -r url="${API}/channels/${CHANNEL}"
-
-	curl --silent --show-error \
-		--request PATCH \
-		--header "Authorization: Bot ${TOKEN}" \
-		--header 'Content-type: application/json' \
-		--data '{"topic":"'"${escaped}"'"}' \
-		"${url}"
+	api "PATCH" "/channels/${CHANNEL}" "${body}"
 }
 
 # send message to discord
 message() {
 	local -r content="${1}"
 	local -r escaped=$(escape "${content}")
+	local -r body='{"content":"'"${escaped}"'"}'
 
-	curl --silent --show-error \
-		--request POST \
-		--header 'Content-type: application/json' \
-		--data '{"content":"'"${escaped}"'"}' \
-		"${HOOK}"
+	api "POST" "/channels/${CHANNEL}/messages" "${body}"
 }
 
 parse() {
@@ -114,7 +118,6 @@ parse() {
 main() {
 	declare -r TOKEN=$(property "token")
 	declare -r CHANNEL=$(property "channel")
-	declare -r HOOK=$(property "hook")
 
 	local -r service=$(property "service")
 
