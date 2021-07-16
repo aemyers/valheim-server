@@ -6,7 +6,7 @@ set -o pipefail
 declare -r PROPERTIES='monitor.properties'
 declare -r API='https://discord.com/api'
 
-declare PLAYER=''
+declare -a PLAYER
 declare -i CONNECTED=0
 
 # echo value for key from properties file
@@ -94,13 +94,14 @@ parse() {
 	if grep --quiet --regexp='Got connection SteamID' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r id=$(cut --delimiter=' ' --fields=5 <<< "${message}")
-		PLAYER=$(property "player.${id}" "(SteamID ${id})")
+		local -r name=$(property "player.${id}" "(SteamID ${id})")
+		PLAYER+=("${name}")
 
 	elif [[ "${PLAYER}" != '' ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
-		message "${PLAYER} connected as ${character}"
-		PLAYER=''
+		message "${PLAYER[0]} connected as ${character}"
+		PLAYER=("${PLAYER[@]:1}") # remove first element
 		status $(( CONNECTED + 1 ))
 
 	elif grep --quiet --regexp='Closing socket' <<< "${line}"; then
