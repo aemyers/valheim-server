@@ -97,7 +97,7 @@ parse() {
 		local -r name=$(property "player.${id}" "(SteamID ${id})")
 		PLAYER+=("${name}")
 
-	elif [[ "${PLAYER}" != '' ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
+	elif [[ "${PLAYER[0]}" != '' ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
 		message "${PLAYER[0]} connected as ${character}"
