@@ -41,6 +41,7 @@ escape() {
 	echo -n "${result}"
 }
 
+# call discord api
 api() {
 	local -r method="${1}"
 	local -r path="${2}"
@@ -54,7 +55,7 @@ api() {
 		"${API}${path}"
 }
 
-# set topic for discord
+# set discord notify channel topic
 topic() {
 	local -r topic="${1}"
 	local -r escaped=$(escape "${topic}")
@@ -63,15 +64,7 @@ topic() {
 	api 'PATCH' "/channels/${CHANNEL_NOTIFY}" "${body}"
 }
 
-# send message to discord
-message() {
-	local -r content="${1}"
-	local -r escaped=$(escape "${content}")
-	local -r body='{"content":"'"${escaped}"'"}'
-
-	api 'POST' "/channels/${CHANNEL_NOTIFY}/messages" "${body}"
-}
-
+# set discord status channel name
 name() {
 	local -r name="${1}"
 	local -r escaped=$(escape "${name}")
@@ -80,12 +73,22 @@ name() {
 	api 'PATCH' "/channels/${CHANNEL_STATUS}" "${body}"
 }
 
+# update discord with server status
 status() {
 	local -ri connected=$1
 
 	CONNECTED=$connected
 	topic "${CONNECTED} connected"
 	name "valheim - ${CONNECTED}"
+}
+
+# send message to discord notify channel
+message() {
+	local -r content="${1}"
+	local -r escaped=$(escape "${content}")
+	local -r body='{"content":"'"${escaped}"'"}'
+
+	api 'POST' "/channels/${CHANNEL_NOTIFY}/messages" "${body}"
 }
 
 parse() {
