@@ -6,7 +6,8 @@ set -o pipefail
 declare -r PROPERTIES='monitor.properties'
 declare -r API='https://discord.com/api'
 
-declare -a PLAYER
+declare -a STEAMID
+declare -A PLAYERS
 declare -i CONNECTED=0
 
 # echo value for key from properties file
@@ -97,17 +98,42 @@ parse() {
 	if grep --quiet --regexp='Got connection SteamID' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r id=$(cut --delimiter=' ' --fields=5 <<< "${message}")
-		local -r name=$(property "player.${id}" "(SteamID ${id})")
-		PLAYER+=("${name}")
+		STEAMID+=("${id}")
 
-	elif [[ "${PLAYER[0]}" != '' ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
+	elif [[ ! -z "${STEAMID[0]}" ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
-		message "${PLAYER[0]} connected as ${character}"
-		PLAYER=("${PLAYER[@]:1}") # remove first element
+
+		if [[ ! -z "${PLAYERS[${character}]}" ]]; then
+			# respawn of already connected character
+			# while another player has started to connect
+			# but before their first spawn
+			return
+		fi
+
+		# first character spawn of next connecting player
+		local -r id="${STEAMID[0]}"
+		STEAMID=("${STEAMID[@]:1}") # remove first element
+
+		# add character:steamid to player list
+		PLAYERS["${character}"]="${id}"
+
+		local -r player=$(property "player.${id}" "(SteamID ${id})")
+		message "${player} connected as ${character}"
 		status $(( CONNECTED + 1 ))
 
 	elif grep --quiet --regexp='Closing socket' <<< "${line}"; then
+		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
+		local -r id=$(cut --delimiter=' ' --fields=4 <<< "${message}")
+
+		# remove character:steamid from player list
+		local key
+		for key in "${!PLAYERS[@]}"; do
+			if [[ "${PLAYERS[${key}]}" == "${id}" ]]; then
+				unset PLAYERS["${key}"]
+				break
+			fi
+		done
 		status $(( CONNECTED - 1 ))
 
 	elif grep --quiet --regexp='Shuting down' <<< "${line}"; then
