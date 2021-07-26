@@ -95,29 +95,28 @@ message() {
 parse() {
 	local -r line="${1}"
 
+	# capture connection attempts in progress to associate to character spawn
 	if grep --quiet --regexp='Got connection SteamID' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r id=$(cut --delimiter=' ' --fields=5 <<< "${message}")
 		STEAMID+=("${id}")
 
+	# determine if character spawn is occuring after a new connection has been initiated
 	elif [[ ! -z "${STEAMID[0]}" ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
 
-		if [[ ! -z "${PLAYERS[${character}]}" ]]; then
-			# respawn of already connected character
-			# while another player has started to connect
-			# but before their first spawn
-			return
-		fi
+		# ignore character spawn if related to already connected player
+		if [[ ! -z "${PLAYERS[${character}]}" ]]; then return; fi
 
-		# first character spawn of next connecting player
+		# assume next connecting player is associated with this first character spawn
 		local -r id="${STEAMID[0]}"
-		STEAMID=("${STEAMID[@]:1}") # remove first element
 
-		# add character:steamid to player list
+		# record connection as complete by removing connection reference and associating character to steamid
+		STEAMID=("${STEAMID[@]:1}") # remove first element
 		PLAYERS["${character}"]="${id}"
 
+		# announce connection status
 		local -r player=$(property "player.${id}" "(SteamID ${id})")
 		message "${player} connected as ${character}"
 		status $(( CONNECTED + 1 ))
@@ -126,7 +125,7 @@ parse() {
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r id=$(cut --delimiter=' ' --fields=4 <<< "${message}")
 
-		# remove character:steamid from player list
+		# remove character to steamid association
 		local key
 		for key in "${!PLAYERS[@]}"; do
 			if [[ "${PLAYERS[${key}]}" == "${id}" ]]; then
@@ -134,6 +133,8 @@ parse() {
 				break
 			fi
 		done
+
+		# update connection status
 		status $(( CONNECTED - 1 ))
 
 	elif grep --quiet --regexp='Shuting down' <<< "${line}"; then
