@@ -48,12 +48,18 @@ api() {
 	local -r path="${2}"
 	local -r body="${3}"
 
-	curl --silent --show-error \
+	echo
+	echo "api call: ${method} ${path}"
+	echo "api body: ${body}"
+
+	curl --silent --show-error --dump-header - \
 		--request "${method}" \
 		--header "Authorization: Bot ${TOKEN}" \
 		--header 'Content-type: application/json' \
 		--data "${body}" \
 		"${API}${path}"
+
+	echo '----'
 }
 
 # set discord notify channel topic
