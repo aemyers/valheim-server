@@ -18,7 +18,7 @@ Environment='PORT=2456'
 Environment='PUBLIC=0'
 Environment='NAME=aemyers'
 Environment='WORLD=world'
-Environment='SAVEDIR={RESOURCES}/save'
+Environment='SAVEDIR={{ RESOURCES }}/save'
 
 TimeoutStartSec=300
 ExecStartPre={{ RESOURCES }}/update.sh
