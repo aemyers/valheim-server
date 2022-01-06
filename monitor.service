@@ -1,6 +1,7 @@
 [Service]
 WorkingDirectory={{ RESOURCES }}
 ExecStart=/bin/bash monitor.sh
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
