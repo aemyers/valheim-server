@@ -14,6 +14,7 @@ dpkg --add-architecture i386
 apt update
 apt --yes upgrade
 apt --yes install lib32gcc1 lib32stdc++6 steamcmd
+apt --yes install awscli
 
 # account
 groupadd "$ACCOUNT"
@@ -31,9 +32,14 @@ mkdir --parents "$INSTALL"
 chown -R "$ACCOUNT":"$ACCOUNT" "$INSTALL"
 su - "$ACCOUNT" "$RESOURCES/update.sh"
 
-# backup
+# backup (every hour)
 schedule='0 * * * *'
 command="$RESOURCES/backup.sh > $RESOURCES/backup.log 2>&1"
+echo "$schedule $command" | crontab -u "$ACCOUNT" -
+
+# offsite backup (11 AM UTC = 4 AM MT)
+schedule='5 11 * * *'
+command="$RESOURCES/offsite.sh > $RESOURCES/offsite.log 2>&1"
 echo "$schedule $command" | crontab -u "$ACCOUNT" -
 
 # services
