@@ -32,7 +32,7 @@ chown -R "$ACCOUNT":"$ACCOUNT" "$INSTALL"
 su - "$ACCOUNT" "$RESOURCES/update.sh"
 
 # backup
-schedule="0 * * * *"
+schedule='0 * * * *'
 command="$RESOURCES/backup.sh > $RESOURCES/backup.log 2>&1"
 echo "$schedule $command" | crontab -u "$ACCOUNT" -
 
