@@ -11,8 +11,11 @@ fi
 
 # create
 stamp=$(date --utc +'%Y%m%d%H%M%S')
-echo "creating backup at $BACKUPS/$stamp.tar.gz"
-tar --create --verbose --gzip --file="$BACKUPS/$stamp.tar.gz" --directory="$WORLDS" .
+file="$BACKUPS/$stamp.tar.gz"
+echo "creating backup at $file"
+pushd "$WORLDS"
+tar --create --verbose --gzip --file="$file" *.old
+popd
 
 # prune
 ls -dt "$BACKUPS"/* \
