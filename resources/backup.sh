@@ -1,7 +1,7 @@
 #!/bin/bash
 
 RESOURCES='{{ RESOURCES }}'
-WORLDS="$RESOURCES/save/worlds"
+WORLDS="$RESOURCES/save/worlds_local"
 BACKUPS="$RESOURCES/backups"
 HISTORY=10
 
