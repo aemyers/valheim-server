@@ -1,5 +1,11 @@
 #!/bin/bash
 
+RESOURCES='{{ RESOURCES }}'
+
 journalctl --unit=valheim --follow --lines=0 &
-sudo systemctl restart valheim
+
+sudo systemctl stop valheim
+"$RESOURCES/update.sh"
+sudo systemctl start valheim
+
 fg
