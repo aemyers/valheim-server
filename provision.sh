@@ -26,6 +26,7 @@ cp --recursive resources/. "$RESOURCES/"
 sed -i "s|{{ RESOURCES }}|${RESOURCES}|g" "$RESOURCES"/*.sh
 sed -i "s|{{ INSTALL }}|${INSTALL}|g" "$RESOURCES"/*.sh
 chown -R "$ACCOUNT":"$ACCOUNT" "$RESOURCES"
+chmod +x "$RESOURCES"/*.sh
 
 # install
 mkdir --parents "$INSTALL"
