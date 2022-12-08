@@ -18,7 +18,7 @@ apt --yes install awscli
 
 # account
 groupadd "$ACCOUNT"
-useradd --system --home-dir "$RESOURCES" --gid "$ACCOUNT" "$ACCOUNT"
+useradd --system --shell /bin/bash --home-dir "$RESOURCES" --gid "$ACCOUNT" "$ACCOUNT"
 
 # resources
 mkdir --parents "$RESOURCES"
