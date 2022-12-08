@@ -13,7 +13,7 @@ MONITOR_SERVICE=valheim-monitor.service
 dpkg --add-architecture i386
 apt update
 apt --yes upgrade
-apt --yes install lib32gcc1 lib32stdc++6 steamcmd
+apt --yes install lib32gcc-s1 steamcmd
 apt --yes install awscli
 
 # account
