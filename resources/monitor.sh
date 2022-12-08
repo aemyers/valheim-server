@@ -143,7 +143,7 @@ parse() {
 		# update connection status
 		status $(( CONNECTED - 1 ))
 
-	elif grep --quiet --regexp='Shuting down' <<< "${line}"; then
+	elif grep --quiet --regexp='Stopping valheim' <<< "${line}"; then
 		CONNECTED=0
 		topic 'server offline'
 		name 'valheim - offline'
