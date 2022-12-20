@@ -40,7 +40,7 @@ echo "$schedule $command" | crontab -u "$ACCOUNT" -
 
 # offsite backup (11 AM UTC = 4 AM MT)
 schedule='5 11 * * *'
-command="$RESOURCES/offsite.sh > $RESOURCES/offsite.log 2>&1"
+command="$RESOURCES/backup-upload.sh > $RESOURCES/backup-upload.log 2>&1"
 (crontab -u "$ACCOUNT" -l 2>/dev/null; echo "$schedule $command") | crontab -u "$ACCOUNT" -
 
 # services
