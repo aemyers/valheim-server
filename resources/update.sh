@@ -28,7 +28,7 @@ fi
 
 echo 'update found; installing...'
 "$STEAMCMD" \
-	+login anonymous \
 	+force_install_dir "$INSTALL" \
+	+login anonymous \
 	+app_update "$APPID" validate \
 	+quit
