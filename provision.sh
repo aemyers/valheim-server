@@ -31,6 +31,7 @@ chmod +x "$RESOURCES"/*.sh
 # install
 mkdir --parents "$INSTALL"
 chown -R "$ACCOUNT":"$ACCOUNT" "$INSTALL"
+chmod g+w "$INSTALL"
 su - "$ACCOUNT" "$RESOURCES/update.sh"
 
 # backup (every hour)
