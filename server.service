@@ -21,7 +21,7 @@ Environment='WORLD=world'
 Environment='SAVEDIR={{ RESOURCES }}/save'
 
 TimeoutStartSec=300
-ExecStart={{ INSTALL }}/valheim_server.x86_64 -port $PORT -public $PUBLIC -name $NAME -world $WORLD -savedir $SAVEDIR
+ExecStart={{ INSTALL }}/valheim_server.x86_64 -port $PORT -public $PUBLIC -crossplay -name $NAME -world $WORLD -savedir $SAVEDIR
 
 KillSignal=SIGINT
 

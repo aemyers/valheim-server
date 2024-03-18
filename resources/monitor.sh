@@ -101,10 +101,18 @@ message() {
 parse() {
 	local -r line="${1}"
 
-	# capture connection attempts in progress to associate to character spawn
+	# capture connection attempts in progress to associate to character spawn - steam
+	# Got connection SteamID 123456789
 	if grep --quiet --regexp='Got connection SteamID' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r id=$(cut --delimiter=' ' --fields=5 <<< "${message}")
+		STEAMID+=("${id}")
+
+	# capture connection attempts in progress to associate to character spawn - crossplay
+	# PlayFab socket with remote ID playfab/987654321 received local Platform ID Steam_123456789
+	elif grep --quiet --regexp='PlayFab socket with remote ID .* received local Platform ID Steam_' <<< "${line}"; then
+		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
+		local -r id=$(cut --delimiter='_' --fields=2 <<< "${message}")
 		STEAMID+=("${id}")
 
 	# determine if character spawn is occuring after a new connection has been initiated

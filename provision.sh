@@ -15,6 +15,8 @@ apt update
 apt --yes upgrade
 apt --yes install lib32gcc-s1 steamcmd
 apt --yes install awscli
+apt --yes install libatomic1 libpulse-dev libpulse0
+
 
 # account
 groupadd "$ACCOUNT"
