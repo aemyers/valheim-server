@@ -8,7 +8,7 @@ declare -r API='https://discord.com/api'
 
 declare -a CONNECTING
 declare -A PLAYERS
-declare -i CONNECTED=0
+declare -i COUNT=0
 
 # echo value for key from properties file
 property() {
@@ -82,11 +82,11 @@ name() {
 
 # update discord with server status
 status() {
-	local -ri connected=$1
+	local -ri count=$1
 
-	CONNECTED=$connected
-	topic "${CONNECTED} connected"
-	name "valheim - ${CONNECTED}"
+	COUNT=$count
+	topic "${COUNT} connected"
+	name "valheim - ${COUNT}"
 }
 
 # send message to discord notify channel
@@ -133,7 +133,7 @@ parse() {
 		# announce connection status
 		local -r player=$(property "player.${id}" "(ID ${id})")
 		message "${player} connected as ${character}"
-		status $(( CONNECTED + 1 ))
+		status $(( COUNT + 1 ))
 
 	elif grep --quiet --regexp='Closing socket' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
@@ -149,10 +149,10 @@ parse() {
 		done
 
 		# update connection status
-		status $(( CONNECTED - 1 ))
+		status $(( COUNT - 1 ))
 
 	elif grep --quiet --regexp='Stopping valheim' <<< "${line}"; then
-		CONNECTED=0
+		COUNT=0
 		topic 'server offline'
 		name 'valheim - offline'
 
@@ -164,8 +164,8 @@ parse() {
 	elif grep --quiet --regexp='Connections' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r squeezed=$(tr --squeeze-repeats ' ' <<< "${message}")
-		local -ri connected=$(cut --delimiter=' ' --fields=3 <<< "${squeezed}")
-		status $connected
+		local -ri count=$(cut --delimiter=' ' --fields=3 <<< "${squeezed}")
+		status $count
 
 	elif grep --quiet --regexp='Random event set' <<< "${line}"; then
 		local -r event=$(cut --delimiter=':' --fields=8 <<< "${line}")
