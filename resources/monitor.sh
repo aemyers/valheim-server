@@ -6,7 +6,7 @@ set -o pipefail
 declare -r PROPERTIES='monitor.properties'
 declare -r API='https://discord.com/api'
 
-declare -a STEAMID
+declare -a CONNECTING
 declare -A PLAYERS
 declare -i CONNECTED=0
 
@@ -106,17 +106,17 @@ parse() {
 	if grep --quiet --regexp='Got connection SteamID' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r id=$(cut --delimiter=' ' --fields=5 <<< "${message}")
-		STEAMID+=("${id}")
+		CONNECTING+=("${id}")
 
 	# capture connection attempts in progress to associate to character spawn - crossplay
 	# PlayFab socket with remote ID playfab/987654321 received local Platform ID Steam_123456789
 	elif grep --quiet --regexp='PlayFab socket with remote ID .* received local Platform ID Steam_' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r id=$(cut --delimiter='_' --fields=2 <<< "${message}")
-		STEAMID+=("${id}")
+		CONNECTING+=("${id}")
 
 	# determine if character spawn is occuring after a new connection has been initiated
-	elif [[ ! -z "${STEAMID[0]}" ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
+	elif [[ ! -z "${CONNECTING[0]}" ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
 		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
 		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
 
@@ -124,14 +124,14 @@ parse() {
 		if [[ ! -z "${PLAYERS[${character}]}" ]]; then return; fi
 
 		# assume next connecting player is associated with this first character spawn
-		local -r id="${STEAMID[0]}"
+		local -r id="${CONNECTING[0]}"
 
 		# record connection as complete by removing connection reference and associating character to steamid
-		STEAMID=("${STEAMID[@]:1}") # remove first element
+		CONNECTING=("${CONNECTING[@]:1}") # remove first element
 		PLAYERS["${character}"]="${id}"
 
 		# announce connection status
-		local -r player=$(property "player.${id}" "(SteamID ${id})")
+		local -r player=$(property "player.${id}" "(ID ${id})")
 		message "${player} connected as ${character}"
 		status $(( CONNECTED + 1 ))
 
