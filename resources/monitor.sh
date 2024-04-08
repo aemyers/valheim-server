@@ -13,13 +13,12 @@ declare -i COUNT=0
 # echo value for key from properties file
 property() {
 	local -r key="${1}"
-	local -r default="${2:-}"
-	local -r file="${3:-$PROPERTIES}"
+	local -r file="${2:-$PROPERTIES}"
 
 	local -r entry=$(grep --regexp="^${key}=" "${file}")
 
 	if [[ "${entry}" == '' ]]; then
-		echo "${default}"
+		echo "${key}"
 		return
 	fi
 
@@ -131,7 +130,7 @@ parse() {
 		PLAYERS["${character}"]="${id}"
 
 		# announce connection status
-		local -r player=$(property "player.${id}" "(ID ${id})")
+		local -r player=$(property "player.${id}")
 		message "${player} connected as ${character}"
 		status $(( COUNT + 1 ))
 
