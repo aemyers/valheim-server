@@ -97,77 +97,49 @@ message() {
 	api 'POST' "/channels/${CHANNEL_NOTIFY}/messages" "${body}"
 }
 
+# "Apr 03 02:00:26 ovh-va-valheim valheim_server.x86_64[92662]: 04/03/2024 02:00:26: Random event set:army_theelder"
 parse() {
 	local -r line="${1}"
+	local -r raw=$(cut --delimiter=':' --fields=7- <<< "${line}")
+	local -r message="${raw:1}"
 
-	# capture connection attempts in progress to associate to character spawn - steam
-	# Got connection SteamID 123456789
-	if grep --quiet --regexp='Got connection SteamID' <<< "${line}"; then
-		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
-		local -r id=$(cut --delimiter=' ' --fields=5 <<< "${message}")
-		CONNECTING+=("${id}")
-
-	# capture connection attempts in progress to associate to character spawn - crossplay
-	# PlayFab socket with remote ID playfab/987654321 received local Platform ID Steam_123456789
-	elif grep --quiet --regexp='PlayFab socket with remote ID .* received local Platform ID Steam_' <<< "${line}"; then
-		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
-		local -r id=$(cut --delimiter='_' --fields=2 <<< "${message}")
-		CONNECTING+=("${id}")
-
-	# determine if character spawn is occuring after a new connection has been initiated
-	elif [[ ! -z "${CONNECTING[0]}" ]] && grep --quiet --regexp='Got character ZDOID from' <<< "${line}"; then
-		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
-		local -r character=$(cut --delimiter=' ' --fields=6 <<< "${message}")
-
-		# ignore character spawn if related to already connected player
-		if [[ ! -z "${PLAYERS[${character}]}" ]]; then return; fi
-
-		# assume next connecting player is associated with this first character spawn
-		local -r id="${CONNECTING[0]}"
-
-		# record connection as complete by removing connection reference and associating character to steamid
-		CONNECTING=("${CONNECTING[@]:1}") # remove first element
-		PLAYERS["${character}"]="${id}"
-
-		# announce connection status
-		local -r player=$(property "player.${id}")
-		message "${player} connected as ${character}"
+	# "Console: <color=orange>Name</color>: <color=#FFEB04FF>I HAVE ARRIVED!</color>"
+	if grep --quiet --regexp='I HAVE ARRIVED\!' <<< "${message}"; then
+		local -r character=$(awk --field-separator='[<>]+' '{print $3}' <<< "${message}")
+		message "${character}: I HAVE ARRIVED!"
 		status $(( COUNT + 1 ))
 
-	elif grep --quiet --regexp='Closing socket' <<< "${line}"; then
-		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
-		local -r id=$(cut --delimiter=' ' --fields=4 <<< "${message}")
-
-		# remove character to steamid association
-		local key
-		for key in "${!PLAYERS[@]}"; do
-			if [[ "${PLAYERS[${key}]}" == "${id}" ]]; then
-				unset PLAYERS["${key}"]
-				break
-			fi
-		done
-
-		# update connection status
+	# "Closing socket 76561199054480035"
+	elif grep --quiet --regexp='^Closing socket' <<< "${message}"; then
 		status $(( COUNT - 1 ))
 
+	# "Player connection lost server "valheim.aemyers.com" that has join code 123456, now 1 player(s)"
+	elif grep --quiet --regexp='^Player connection lost' <<< "${message}"; then
+		local -ri after=$(cut --delimiter='"' --fields=3 <<< "${message}")
+		local -ri count=$(cut --delimiter=' ' --fields=8 <<< "${after}")
+		status $count
+
+	# "Apr 08 21:36:21 ovh-va-valheim systemd[1]: Stopping valheim..."
 	elif grep --quiet --regexp='Stopping valheim' <<< "${line}"; then
 		COUNT=0
 		topic 'server offline'
 		name 'valheim - offline'
 
-	elif grep --quiet --regexp='Valheim version' <<< "${line}"; then
-		local -r version=$(cut --delimiter=':' --fields=8 <<< "${line}")
-		message "started v${version}"
+	# "Valheim version: l-0.217.38 (network version 20)"
+	elif grep --quiet --regexp='^Valheim version' <<< "${message}"; then
+		local -r data=$(cut --delimiter=' ' --fields=3 <<< "${message}")
+		local -r version=$(cut --delimiter='-' --fields=2 <<< "${data}")
+		message "started version ${version}"
 		status 0
 
-	elif grep --quiet --regexp='Connections' <<< "${line}"; then
-		local -r message=$(cut --delimiter=':' --fields=7 <<< "${line}")
-		local -r squeezed=$(tr --squeeze-repeats ' ' <<< "${message}")
-		local -ri count=$(cut --delimiter=' ' --fields=3 <<< "${squeezed}")
+ 	# " Connections 2 ZDOS:222503  sent:57 recv:216"
+	elif grep --quiet --regexp='^ Connections' <<< "${message}"; then
+		local -ri count=$(cut --delimiter=' ' --fields=3 <<< "${message}")
 		status $count
 
-	elif grep --quiet --regexp='Random event set' <<< "${line}"; then
-		local -r event=$(cut --delimiter=':' --fields=8 <<< "${line}")
+	# "Random event set:army_theelder"
+	elif grep --quiet --regexp='^Random event set' <<< "${message}"; then
+		local -r event=$(cut --delimiter=':' --fields=2 <<< "${message}")
 		local -r description=$(property "event.${event}")
 		message "random event started: \"${description}\" (${event})"
 
