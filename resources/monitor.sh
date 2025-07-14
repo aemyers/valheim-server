@@ -6,6 +6,9 @@ set -o pipefail
 declare -r PROPERTIES='monitor.properties'
 declare -r API='https://discord.com/api'
 
+declare -ri DEATH=0
+declare -r JOIN=20
+
 declare -i COUNT=0
 
 # echo value for key from properties file
@@ -101,11 +104,14 @@ parse() {
 	local -r raw=$(cut --delimiter=':' --fields=7- <<< "${line}")
 	local -r message="${raw:1}"
 
-	# "Console: <color=orange>Name</color>: <color=#FFEB04FF>I HAVE ARRIVED!</color>"
-	if grep --quiet --regexp='I HAVE ARRIVED\!' <<< "${message}"; then
-		local -r character=$(awk --field-separator='[<>]+' '{print $3}' <<< "${message}")
-		message "${character}: I HAVE ARRIVED!"
-		status $(( COUNT + 1 ))
+	# "Got character ZDOID from Name : 1234567890:1" # "<id>:<seconds connected>", "0:0" is death
+	if grep --quiet --regexp='Got character ZDOID from' <<< "${message}"; then
+		local -r duration=$(awk --field-separator='[ :]+' '{print $7}' <<< "${message}")
+		if [ $duration -ne $DEATH ] && [ $duration -lt $JOIN ]; then
+			local -r character=$(awk --field-separator='[ :]+' '{print $5}' <<< "${message}")
+			message "${character}: I HAVE ARRIVED!"
+			status $(( COUNT + 1 ))
+		fi
 
 	# "Closing socket 76561199054480035"
 	elif grep --quiet --regexp='^Closing socket' <<< "${message}"; then
