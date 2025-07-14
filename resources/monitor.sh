@@ -6,8 +6,6 @@ set -o pipefail
 declare -r PROPERTIES='monitor.properties'
 declare -r API='https://discord.com/api'
 
-declare -a CONNECTING
-declare -A PLAYERS
 declare -i COUNT=0
 
 # echo value for key from properties file
