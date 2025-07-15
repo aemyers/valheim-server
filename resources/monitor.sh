@@ -114,9 +114,10 @@ parse_content() {
 parse() {
 	local -r message=$(parse_content "${1}")
 
-	# "Got character ZDOID from Name : 1234567890:1" # "<id>:<seconds connected>", "0:0" is death
-	if grep --quiet --regexp='Got character ZDOID from' <<< "${message}"; then
-		local -r duration=$(awk --field-separator='[ :]+' '{print $7}' <<< "${message}")
+	# 'Got character ZDOID from Name With Spaces  : 1234567890:1' # '<id>:<seconds connected>', '0:0' is death
+	if grep --quiet --regexp='^Got character ZDOID from' <<< "${message}"; then
+		local -r data=$(cut --delimiter=' ' --fields=5- <<< "${line}")    # 'Name With Spaces  : 1234567890:1'
+		local -r duration=$(cut --delimiter=':' --fields=3 <<< "${data}") # '1'
 		if [ $duration -ne $DEATH ] && [ $duration -lt $JOIN ]; then
 			local -r character=$(awk --field-separator='[ :]+' '{print $5}' <<< "${message}")
 			message "${character}: I HAVE ARRIVED!"
