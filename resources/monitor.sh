@@ -119,8 +119,9 @@ parse() {
 		local -r data=$(cut --delimiter=' ' --fields=5- <<< "${line}")    # 'Name With Spaces  : 1234567890:1'
 		local -r duration=$(cut --delimiter=':' --fields=3 <<< "${data}") # '1'
 		if [ $duration -ne $DEATH ] && [ $duration -lt $JOIN ]; then
-			local -r character=$(awk --field-separator='[ :]+' '{print $5}' <<< "${message}")
-			message "${character}: I HAVE ARRIVED!"
+			local -r character=$(cut --delimiter=':' --fields=1 <<< "${data}")  # 'Name With Spaces '
+			local -r trimmed=$(sed -e 's/[[:space:]]*$//' <<< "${character}")   # 'Name With Spaces'
+			message "${trimmed}: I HAVE ARRIVED!"
 			status $(( COUNT + 1 ))
 		fi
 
