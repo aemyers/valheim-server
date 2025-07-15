@@ -98,11 +98,21 @@ message() {
 	api 'POST' "/channels/${CHANNEL_NOTIFY}/messages" "${body}"
 }
 
-# "Apr 03 02:00:26 ovh-va-valheim valheim_server.x86_64[92662]: 04/03/2024 02:00:26: Random event set:army_theelder"
-parse() {
+parse_content() {
 	local -r line="${1}"
+	# 'Apr 03 02:00:26 ovh-va-valheim valheim_server.x86_64[92662]: 04/03/2024 02:00:26: Random event set:army_theelder'
+
 	local -r raw=$(cut --delimiter=':' --fields=7- <<< "${line}")
-	local -r message="${raw:1}"
+	# ' Random event set:army_theelder'
+
+	local -r result="${raw:1}"
+	# 'Random event set:army_theelder'
+
+	echo "${result}"
+}
+
+parse() {
+	local -r message=$(parse_content "${1}")
 
 	# "Got character ZDOID from Name : 1234567890:1" # "<id>:<seconds connected>", "0:0" is death
 	if grep --quiet --regexp='Got character ZDOID from' <<< "${message}"; then
