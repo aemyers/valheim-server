@@ -86,7 +86,7 @@ status() {
 
 	COUNT=$count
 	topic "${COUNT} connected"
-	name "valheim - ${COUNT}"
+	name "valheim - ${COUNT} connected"
 }
 
 # send message to discord notify channel
