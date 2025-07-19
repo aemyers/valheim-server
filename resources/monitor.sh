@@ -7,9 +7,11 @@ declare -r PROPERTIES='monitor.properties'
 declare -r API='https://discord.com/api'
 
 declare -ri DEATH=0
-declare -r JOIN=20
+declare -ri JOIN=20
+declare -ri RATE=1
 
 declare -i COUNT=0
+declare -i LAST=0
 
 # echo value for key from properties file
 property() {
@@ -48,6 +50,11 @@ api() {
 	local -r path="${2}"
 	local -r body="${3}"
 
+	local -ri now=$(date +%s)
+	local -ri since=$($now - $LAST)
+	if [ $since -lt $RATE ]; then sleep $RATE; fi
+
+	echo '---'
 	echo
 	echo "api call: ${method} ${path}"
 	echo "api body: ${body}"
@@ -58,8 +65,6 @@ api() {
 		--header 'Content-type: application/json' \
 		--data "${body}" \
 		"${API}${path}"
-
-	echo '----'
 }
 
 # set discord notify channel topic
