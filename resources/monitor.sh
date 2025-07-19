@@ -116,7 +116,7 @@ parse() {
 
 	# 'Got character ZDOID from Name With Spaces  : 1234567890:1' # '<id>:<seconds connected>', '0:0' is death
 	if grep --quiet --regexp='^Got character ZDOID from' <<< "${message}"; then
-		local -r data=$(cut --delimiter=' ' --fields=5- <<< "${line}")    # 'Name With Spaces  : 1234567890:1'
+		local -r data=$(cut --delimiter=' ' --fields=5- <<< "${message}") # 'Name With Spaces  : 1234567890:1'
 		local -r duration=$(cut --delimiter=':' --fields=3 <<< "${data}") # '1'
 		if [ $duration -ne $DEATH ] && [ $duration -lt $JOIN ]; then
 			local -r character=$(cut --delimiter=':' --fields=1 <<< "${data}")  # 'Name With Spaces '
@@ -136,7 +136,7 @@ parse() {
 		status $count
 
 	# "Apr 08 21:36:21 ovh-va-valheim systemd[1]: Stopping valheim..."
-	elif grep --quiet --regexp='Stopping valheim' <<< "${line}"; then
+	elif grep --quiet --regexp='Stopping valheim' <<< "${message}"; then
 		COUNT=0
 		topic 'server offline'
 		name 'valheim - offline'
