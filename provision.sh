@@ -6,8 +6,6 @@ set -o xtrace
 ACCOUNT=valheim
 RESOURCES=/var/opt/valheim
 INSTALL=/opt/valheim
-SERVER_SERVICE=valheim.service
-MONITOR_SERVICE=valheim-monitor.service
 
 # prepare
 dpkg --add-architecture i386
@@ -47,13 +45,13 @@ command="$RESOURCES/backup-upload.sh > $RESOURCES/backup-upload.log 2>&1"
 (crontab -u "$ACCOUNT" -l 2>/dev/null; echo "$schedule $command") | crontab -u "$ACCOUNT" -
 
 # services
-cat server.service \
+cat valheim.service \
 	| sed "s|{{ RESOURCES }}|${RESOURCES}|g" \
 	| sed "s|{{ INSTALL }}|${INSTALL}|g" \
-	> "/etc/systemd/system/${SERVER_SERVICE}"
-cat monitor.service \
+	> "/etc/systemd/system/valheim.service"
+cat valheim-monitor.service \
         | sed "s|{{ RESOURCES }}|${RESOURCES}|g" \
         | sed "s|{{ INSTALL }}|${INSTALL}|g" \
-        > "/etc/systemd/system/${MONITOR_SERVICE}"
+        > "/etc/systemd/system/valheim-monitor.service"
 systemctl daemon-reload
-systemctl enable --now "${SERVER_SERVICE}" "${MONITOR_SERVICE}"
+systemctl enable --now 'valheim.service' 'valheim-monitor.service'
