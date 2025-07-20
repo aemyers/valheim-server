@@ -42,11 +42,11 @@ parse_content() {
 }
 
 parse() {
-	local -r message=$(parse_content "${1}")
+	local -r content=$(parse_content "${1}")
 
 	# 'Got character ZDOID from Name With Spaces  : 1234567890:1' # '<id>:<seconds connected>', '0:0' is death
-	if grep --quiet --regexp='^Got character ZDOID from' <<< "${message}"; then
-		local -r data=$(cut --delimiter=' ' --fields=5- <<< "${message}") # 'Name With Spaces  : 1234567890:1'
+	if grep --quiet --regexp='^Got character ZDOID from' <<< "${content}"; then
+		local -r data=$(cut --delimiter=' ' --fields=5- <<< "${content}") # 'Name With Spaces  : 1234567890:1'
 		local -r duration=$(cut --delimiter=':' --fields=3 <<< "${data}") # '1'
 		if [ $duration -ne $DEATH ] && [ $duration -lt $JOIN ]; then
 			local -r character=$(cut --delimiter=':' --fields=1 <<< "${data}")  # 'Name With Spaces '
@@ -56,36 +56,36 @@ parse() {
 		fi
 
 	# "Closing socket 76561199054480035"
-	elif grep --quiet --regexp='^Closing socket' <<< "${message}"; then
+	elif grep --quiet --regexp='^Closing socket' <<< "${content}"; then
 		status $(( COUNT - 1 ))
 
 	# "Player connection lost server "valheim.aemyers.com" that has join code 123456, now 1 player(s)"
-	elif grep --quiet --regexp='^Player connection lost' <<< "${message}"; then
-		local -ri after=$(cut --delimiter='"' --fields=3 <<< "${message}")
+	elif grep --quiet --regexp='^Player connection lost' <<< "${content}"; then
+		local -ri after=$(cut --delimiter='"' --fields=3 <<< "${content}")
 		local -ri count=$(cut --delimiter=' ' --fields=8 <<< "${after}")
 		status $count
 
 	# "Apr 08 21:36:21 ovh-va-valheim systemd[1]: Stopping valheim..."
-	elif grep --quiet --regexp='Stopping valheim' <<< "${message}"; then
+	elif grep --quiet --regexp='Stopping valheim' <<< "${content}"; then
 		COUNT=0
 		topic 'server offline'
 		name 'valheim - offline'
 
 	# "Valheim version: l-0.217.38 (network version 20)"
-	elif grep --quiet --regexp='^Valheim version' <<< "${message}"; then
-		local -r data=$(cut --delimiter=' ' --fields=3 <<< "${message}")
+	elif grep --quiet --regexp='^Valheim version' <<< "${content}"; then
+		local -r data=$(cut --delimiter=' ' --fields=3 <<< "${content}")
 		local -r version=$(cut --delimiter='-' --fields=2 <<< "${data}")
 		discord_message "${CHANNEL_NOTIFY}" "started version ${version}"
 		status 0
 
  	# " Connections 2 ZDOS:222503  sent:57 recv:216"
-	elif grep --quiet --regexp='^ Connections' <<< "${message}"; then
-		local -ri count=$(cut --delimiter=' ' --fields=3 <<< "${message}")
+	elif grep --quiet --regexp='^ Connections' <<< "${content}"; then
+		local -ri count=$(cut --delimiter=' ' --fields=3 <<< "${content}")
 		status $count
 
 	# "Random event set:army_theelder"
-	elif grep --quiet --regexp='^Random event set' <<< "${message}"; then
-		local -r event=$(cut --delimiter=':' --fields=2 <<< "${message}")
+	elif grep --quiet --regexp='^Random event set' <<< "${content}"; then
+		local -r event=$(cut --delimiter=':' --fields=2 <<< "${content}")
 		local -r description=$(properties_read "${PROPERTIES}" "event.${event}")
 		discord_message "${CHANNEL_NOTIFY}" "random event started: \"${description}\" (${event})"
 
