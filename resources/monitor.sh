@@ -16,14 +16,14 @@ readonly CHANNEL_STATUS=$(properties_read "${PROPERTIES}" "channel.status")
 readonly DEATH=0
 readonly JOIN=20
 
-COUNT=0
+CONNECTED=0
 
 status() {
 	count=$1
 
-	COUNT=$count
-	discord_topic "${CHANNEL_NOTIFY}" "${COUNT} connected"
-	discord_name "${CHANNEL_STATUS}" "valheim - ${COUNT} connected"
+	CONNECTED=$count
+	discord_topic "${CHANNEL_NOTIFY}" "${CONNECTED} connected"
+	discord_name "${CHANNEL_STATUS}" "valheim - ${CONNECTED} connected"
 }
 
 parse_content() {
@@ -50,12 +50,12 @@ parse() {
 			character=$(cut --delimiter=':' --fields=1 <<< "${data}")  # 'Name With Spaces '
 			trimmed=$(sed -e 's/[[:space:]]*$//' <<< "${character}")   # 'Name With Spaces'
 			discord_message "${CHANNEL_NOTIFY}" "${trimmed}: I HAVE ARRIVED!"
-			status $(( COUNT + 1 ))
+			status $(( CONNECTED + 1 ))
 		fi
 
 	# "Closing socket 76561199054480035"
 	elif grep --quiet --regexp='^Closing socket' <<< "${content}"; then
-		status $(( COUNT - 1 ))
+		status $(( CONNECTED - 1 ))
 
 	# "Player connection lost server "valheim.aemyers.com" that has join code 123456, now 1 player(s)"
 	elif grep --quiet --regexp='^Player connection lost' <<< "${content}"; then
@@ -65,7 +65,7 @@ parse() {
 
 	# "Apr 08 21:36:21 ovh-va-valheim systemd[1]: Stopping valheim..."
 	elif grep --quiet --regexp='Stopping valheim' <<< "${content}"; then
-		COUNT=0
+		CONNECTED=0
 		topic 'server offline'
 		name 'valheim - offline'
 
